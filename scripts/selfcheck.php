@@ -162,6 +162,19 @@ if ($sdkPath !== null && is_file($sdkPath . '/polyfills.php')) {
  */
 function use_tokenhub_sdk_checks(): void
 {
+    if (!function_exists('add_action')) {
+        function add_action(string $hook, $callback, int $priority = 10, int $acceptedArgs = 1): void
+        {
+        }
+    }
+    if (!function_exists('add_filter')) {
+        function add_filter(string $hook, $callback, int $priority = 10, int $acceptedArgs = 1): void
+        {
+        }
+    }
+
+    require_once dirname(__DIR__) . '/bestony-ai-provider-for-tencentcloud-tokenhub.php';
+
     $response = new \WordPress\AiClient\Providers\Http\DTO\Response(
         200,
         [],
@@ -271,6 +284,18 @@ function use_tokenhub_sdk_checks(): void
         new \WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication('test-key')
     );
     check(TencentCloudTokenHubConfig::hasCredentials(), 'the credential registry reports a configured API key');
+
+    $preferences = \TencentCloudTokenHub\AiProvider\prefer_tokenhub_models([
+        ['openai', 'gpt-5'],
+        ['tencentcloud_tokenhub', 'old-model'],
+        ['google', 'gemini-3'],
+    ]);
+    check(
+        $preferences[0] === ['tencentcloud_tokenhub', 'hy4-preview']
+            && $preferences[1] === ['openai', 'gpt-5']
+            && $preferences[2] === ['google', 'gemini-3'],
+        'model preference filters pin Token Hub and preserve other providers'
+    );
 
     $model = new \TencentCloudTokenHub\AiProvider\Models\TencentCloudTokenHubTextGenerationModel(
         $byId['hy4-preview'],
