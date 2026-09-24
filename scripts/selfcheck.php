@@ -276,8 +276,16 @@ function use_tokenhub_sdk_checks(): void
     // Credential state comes from the AI Client registry, not from a Connector option lookup.
     $registry = \WordPress\AiClient\AiClient::defaultRegistry();
     $registry->setHttpTransporter($transporter);
+    $previousApiKey = getenv('TENCENTCLOUD_TOKENHUB_API_KEY');
+    putenv('TENCENTCLOUD_TOKENHUB_API_KEY=selfcheck-key');
     if (!$registry->hasProvider(\TencentCloudTokenHub\AiProvider\Provider\TencentCloudTokenHubProvider::class)) {
         $registry->registerProvider(\TencentCloudTokenHub\AiProvider\Provider\TencentCloudTokenHubProvider::class);
+    }
+    check(TencentCloudTokenHubConfig::hasCredentials(), 'the registry resolves the provider API key environment variable');
+    if ($previousApiKey === false) {
+        putenv('TENCENTCLOUD_TOKENHUB_API_KEY');
+    } else {
+        putenv('TENCENTCLOUD_TOKENHUB_API_KEY=' . $previousApiKey);
     }
     $registry->setProviderRequestAuthentication(
         TencentCloudTokenHubConfig::PROVIDER_ID,
